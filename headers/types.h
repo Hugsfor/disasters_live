@@ -48,6 +48,6 @@ typedef struct {
 } event;
 
 // Callback for event notifications
-typedef void (*event_callback_t)(const event *event);
+typedef void (*event_callback)(const event *event);
 
 #endif
