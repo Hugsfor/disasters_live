@@ -41,10 +41,8 @@ void parse_and_process(const char *raw_json,
         }
 
         cJSON *rain = cJSON_GetObjectItem(current, "precipitation");
-
         if (cJSON_IsNumber(rain))
         {
-
             weather_feed_rain(weather,
                               rain->valuedouble,
                               time(NULL));
