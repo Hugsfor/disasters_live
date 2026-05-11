@@ -11,4 +11,7 @@ void parse_and_process(const char *raw_json,
                        weather_monitor *weather,
                        flood_monitor *flood);
 
+void parse_earthquake_data(const char *raw_json,
+                           seismic_monitor *seismo);
+
 #endif

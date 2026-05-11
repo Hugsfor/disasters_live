@@ -56,3 +56,48 @@ void parse_and_process(const char *raw_json,
 
     cJSON_Delete(json);
 }
+
+void parse_earthquake_data(const char *raw_json,
+                           seismic_monitor *seismo)
+{
+    if (!raw_json) return;
+
+    cJSON *json = cJSON_Parse(raw_json);
+    if (!json) return;
+
+    cJSON *features =
+        cJSON_GetObjectItem(json, "features");
+
+    if (!cJSON_IsArray(features)) {
+        cJSON_Delete(json);
+        return;
+    }
+
+    cJSON *quake = NULL;
+
+    cJSON_ArrayForEach(quake, features) {
+
+        cJSON *properties =
+            cJSON_GetObjectItem(quake, "properties");
+
+        if (!properties) continue;
+
+        cJSON *mag =
+            cJSON_GetObjectItem(properties, "mag");
+
+        if (cJSON_IsNumber(mag)) {
+
+            double magnitude = mag->valuedouble;
+
+            seismic_feed(
+                seismo,
+                magnitude,
+                magnitude,
+                magnitude,
+                time(NULL)
+            );
+        }
+    }
+
+    cJSON_Delete(json);
+}

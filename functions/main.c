@@ -103,12 +103,20 @@ int main(void) {
         char *json_data =
             http_get("https://api.open-meteo.com/v1/forecast?latitude=35&longitude=-97&current=temperature_2m,precipitation,pressure_msl,wind_speed_10m");
 
+        char *quake_data =
+        http_get("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson");
+
         if (json_data) {
-            parse_and_process(json_data, &seismo, &weather, &flood);
+            parse_and_process( json_data, &seismo, &weather, &flood);
             free(json_data);
         }
 
-        last_api_call = now;
+        if (quake_data) {
+            parse_earthquake_data( quake_data, &seismo);
+            free(quake_data);
+        }
+
+    last_api_call = now;
     }
 
     // 2. predictor
