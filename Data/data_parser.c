@@ -15,7 +15,7 @@ void parse_and_process(const char *raw_json,
     cJSON *json = cJSON_Parse(raw_json);
     if (!json) return;
 
-    // 🔥 WEATHER DATA (Open-Meteo format)
+    //WEATHER DATA (Open-Meteo format)
     cJSON *current = cJSON_GetObjectItem(json, "current");
     if (current) {
 
