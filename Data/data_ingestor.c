@@ -9,6 +9,7 @@
 #include "../headers/meteorological.h"
 #include "../headers/hydro.h"
 
+
 // buffer HTTP
 struct Memory {
     char *data;
@@ -52,10 +53,11 @@ char *http_get(const char *url) {
     CURLcode res = curl_easy_perform(curl);
 
     if (res != CURLE_OK) {
-        fprintf(stderr, "curl error: %s\n", curl_easy_strerror(res));
-        // Opțional: poți da free aici și returna NULL dacă vrei să marchezi eșecul total
-    }
-
+    fprintf(stderr, "curl error: %s\n", curl_easy_strerror(res));
+    free(chunk.data);
+    curl_easy_cleanup(curl);
+    return NULL;
+}
     curl_easy_cleanup(curl);
     return chunk.data;
 }

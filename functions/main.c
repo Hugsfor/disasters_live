@@ -7,6 +7,10 @@
 #include "meteorological.h"
 #include "hydro.h"
 #include "predictor.h"
+//+++
+#include "../Data/data_ingestor.h"
+#include "../Data/data_parser.h"
+
 
 // global predictor for all subsystems to share
 static predictor global_predictor;
@@ -89,25 +93,34 @@ int main(void) {
 
 
     while (1) {
-        time_t now = time(NULL);
+    time_t now = time(NULL);
 
-   // make the connections
+    // 1. API CALL
+    static time_t last_api_call = 0;
 
+    if (now - last_api_call >= 10) {
 
+        char *json_data =
+            http_get("https://api.open-meteo.com/v1/forecast?latitude=35&longitude=-97&current=temperature_2m,precipitation,pressure_msl,wind_speed_10m");
 
-
-
-
-        static time_t last_assessment = 0;
-        if (now - last_assessment >= 60) {
-            predictor_assess(&global_predictor, 34.05, -118.25, now);
-            predictor_reset(&global_predictor);
-            last_assessment = now;
+        if (json_data) {
+            parse_and_process(json_data, &seismo, &weather, &flood);
+            free(json_data);
         }
 
-        // small sleep to prevent busy loop
-        usleep(10000);
+        last_api_call = now;
     }
+
+    // 2. predictor
+    static time_t last_assessment = 0;
+    if (now - last_assessment >= 60) {
+        predictor_assess(&global_predictor, 34.05, -118.25, now);
+        predictor_reset(&global_predictor);
+        last_assessment = now;
+    }
+
+    usleep(10000);
+}
 
     // cleanup
     seismic_destroy(&seismo);
