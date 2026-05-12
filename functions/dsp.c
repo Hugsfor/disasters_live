@@ -9,6 +9,14 @@
 void biquad_bandpass(filter *f, double low_cutoff, double high_cutoff, double sample_rate) {
     memset(f->x, 0, sizeof(f->x));
     memset(f->y, 0, sizeof(f->y));
+    memset(f->b, 0, sizeof(f->b));
+    memset(f->a, 0, sizeof(f->a));
+
+    if (low_cutoff <= 0 || high_cutoff <= low_cutoff || sample_rate <= 0) {
+        f->b[0] = 1.0;
+        f->a[0] = 1.0;
+        return;
+    }
 
     // calculate normalized center frequency and bandwidth
     double bandwidth = 2.0 * M_PI * (high_cutoff - low_cutoff) / sample_rate;
