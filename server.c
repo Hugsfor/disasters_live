@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
@@ -16,11 +17,16 @@
 
 #define PORT 8080
 
-// Variabile globale preluate din monitorizările active din main.c
+// Include global.h so we use the SAME GlobalEvent type, global_events_list,
+// global_events_count, and events_mutex as data_parser.c and globals.c.
+// The old server.c only read global_earthquake_risk/global_flood_risk (two summary doubles)
+// and built hardcoded fake events from them. It never read the real events array
+// that data_parser.c was filling. That's why the browser always got empty or stale data.
+#include "headers/global.h"
+
 extern double global_earthquake_risk;
 extern double global_flood_risk;
 
-// Funcție ajutătoare pentru a converti probabilitatea numerică în textul cerut de legendă
 const char* get_risk_string(double prob) {
     if (prob > 0.75) return "critical";
     if (prob > 0.50) return "high";
@@ -38,93 +44,85 @@ void start_server() {
 #endif
 
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd < 0) {
-        perror("Socket failed");
-        exit(EXIT_FAILURE);
-    }
+    if (server_fd < 0) { perror("Socket failed"); exit(EXIT_FAILURE); }
 
     int opt = 1;
-#ifdef _WIN32
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt, sizeof(opt));
-#else
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-#endif
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
 
     struct sockaddr_in address;
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(PORT);
 
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
-        perror("Bind failed");
-        close_socket(server_fd);
-        exit(EXIT_FAILURE);
+    if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
+        perror("Bind failed"); close_socket(server_fd); exit(EXIT_FAILURE);
     }
-
     if (listen(server_fd, 5) < 0) {
-        perror("Listen failed");
-        close_socket(server_fd);
-        exit(EXIT_FAILURE);
+        perror("Listen failed"); close_socket(server_fd); exit(EXIT_FAILURE);
     }
 
-    printf("HTTP Server running on port %d (GeoJSON Dispatcher)\n", PORT);
+    printf("HTTP Server running on port %d\n", PORT);
 
     while (1) {
         int addrlen = sizeof(address);
-        int new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
-        
+        int new_socket = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
         if (new_socket < 0) continue;
 
         char buffer[2048] = {0};
         recv(new_socket, buffer, sizeof(buffer) - 1, 0);
 
-        // Generăm dinamic JSON-ul cu structura exactă pe care o așteaptă scriptul din index.html
-        char json[2048];
-        time_t timestamp = time(NULL);
-        
-        int json_len = snprintf(json, sizeof(json),
-            "{\n"
-            "  \"events\": [\n"
-            "    {\n"
-            "      \"type\": \"earthquake\",\n"
-            "      \"risk\": \"%s\",\n"
-            "      \"probability\": %.2f,\n"
-            "      \"magnitude\": %.1f,\n"
-            "      \"affected_radius\": %.1f,\n"
-            "      \"latitude\": 34.05,\n"
-            "      \"longitude\": -118.25,\n"
-            "      \"detection_time\": %ld\n"
-            "    },\n"
-            "    {\n"
-            "      \"type\": \"flood\",\n"
-            "      \"risk\": \"%s\",\n"
-            "      \"probability\": %.2f,\n"
-            "      \"magnitude\": %.1f,\n"
-            "      \"affected_radius\": %.1f,\n"
-            "      \"latitude\": 35.20,\n"
-            "      \"longitude\": -97.44,\n"
-            "      \"detection_time\": %ld\n"
-            "    }\n"
-            "  ]\n"
-            "}",
-            get_risk_string(global_earthquake_risk), global_earthquake_risk, (global_earthquake_risk * 9.0), (global_earthquake_risk * 150.0), (long)timestamp,
-            get_risk_string(global_flood_risk), global_flood_risk, (global_flood_risk * 5.0), (global_flood_risk * 80.0), (long)timestamp
-        );
+        // Build JSON from the real events array (filled by data_parser.c)
+        char *json = calloc(1, 200000);
+        strcpy(json, "{\n  \"events\": [\n");
 
-        // Construim răspunsul HTTP, incluzând CORS pentru a permite browserului să citească datele cross-origin
-        char response[4096];
-        int response_len = snprintf(response, sizeof(response),
+        pthread_mutex_lock(&events_mutex);
+        int count = global_events_count;
+
+        for (int i = 0; i < count; i++) {
+            char item[512];
+            snprintf(item, sizeof(item),
+                "    {\n"
+                "      \"type\": \"%s\",\n"
+                "      \"risk\": \"%s\",\n"
+                "      \"probability\": %.2f,\n"
+                "      \"magnitude\": %.1f,\n"
+                "      \"affected_radius\": %.1f,\n"
+                "      \"latitude\": %.4f,\n"
+                "      \"longitude\": %.4f,\n"
+                "      \"detection_time\": %ld\n"
+                "    }%s\n",
+                global_events_list[i].type,
+                get_risk_string(global_events_list[i].probability),
+                global_events_list[i].probability,
+                global_events_list[i].magnitude,
+                global_events_list[i].affected_radius,
+                global_events_list[i].latitude,
+                global_events_list[i].longitude,
+                (long)time(NULL),
+                (i == count - 1) ? "" : ","
+            );
+            if (strlen(json) + strlen(item) < 180000)
+                strcat(json, item);
+        }
+
+        pthread_mutex_unlock(&events_mutex);
+        strcat(json, "  ]\n}");
+
+        int body_len = strlen(json);
+        char header[512];
+        sprintf(header,
             "HTTP/1.1 200 OK\r\n"
             "Content-Type: application/json\r\n"
             "Access-Control-Allow-Origin: *\r\n"
             "Access-Control-Allow-Methods: GET, OPTIONS\r\n"
             "Content-Length: %d\r\n"
-            "\r\n"
-            "%s",
-            json_len, json
-        );
+            "Connection: close\r\n"
+            "\r\n",
+            body_len);
 
-        send(new_socket, response, response_len, 0);
+        send(new_socket, header, strlen(header), 0);
+        send(new_socket, json, body_len, 0);
+        free(json);
         close_socket(new_socket);
     }
 
