@@ -9,51 +9,48 @@
 void biquad_bandpass(filter *f, double low_cutoff, double high_cutoff, double sample_rate) {
     memset(f->x, 0, sizeof(f->x));
     memset(f->y, 0, sizeof(f->y));
+    memset(f->b, 0, sizeof(f->b));
+    memset(f->a, 0, sizeof(f->a));
+    
+    // guard against invalid parameters
+    if (low_cutoff <= 0 || high_cutoff <= low_cutoff || sample_rate <= 0) {
+        // set passthrough filter
+        f->b[0] = 1.0;
+        f->a[0] = 1.0;
+        return;
+    }
 
-    // calculate normalized center frequency and bandwidth
-    double bandwidth = 2.0 * M_PI * (high_cutoff - low_cutoff) / sample_rate;
-    double center_freq = 2.0 * M_PI * sqrt(low_cutoff * high_cutoff) / sample_rate;
+    // pre-warp the cutoff frequencies
+    double w1 = 2.0 * sample_rate * tan(M_PI * low_cutoff / sample_rate);
+    double w2 = 2.0 * sample_rate * tan(M_PI * high_cutoff / sample_rate);
+    double w0 = sqrt(w1 * w2);
+    double bandwidth = w2 - w1;
 
-    double cos_bandwidth = cos(bandwidth);
-    double sin_bandwidth = sin(bandwidth);
-
-    // Q factor = 0.7071 gives Butterworth (maximally flat) response
-    double q_factor = 1.4142;
-    double alpha = sin_bandwidth / q_factor;
-
-    // compute raw coefficients
-    f->b[0] = alpha;
-    f->b[1] = 0.0;
-    f->b[2] = -alpha;
-    f->a[0] = 1.0 + alpha;
-    f->a[1] = -2.0 * cos_bandwidth;
-
-    // normalize so feedback is 1.0
-    double normalization = 1.0 / f->a[0];
-    f->b[0] *= normalization;
-    f->b[1] *= normalization;
-    f->b[2] *= normalization;
-    f->a[1] *= normalization;
+    // calculate Q factor for Butterworth response
+    double Q = w0 / bandwidth;
+    
+    // compute coefficients using standard bilinear transform
+    double K = tan(M_PI * (high_cutoff - low_cutoff) / sample_rate);
+    double norm = 1.0 / (1.0 + K / Q + K * K);
+    
+    f->b[0] = K * K * norm;
+    f->b[1] = -2.0 * K * K * norm;
+    f->b[2] = K * K * norm;
+    f->a[0] = 1.0;
+    f->a[1] = -2.0 * (K * K - 1.0) * norm;
+    f->a[2] = (1.0 - K / Q + K * K) * norm;
 }
 
 
  // process a sample through the biquad filter
- // uses Direct Form I structure: y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1]
-
 double biquad_process(filter *f, double input_sample) {
-    // shift input delay
-    f->x[2] = f->x[1];   // x[n-2] = old x[n-1]
-    f->x[1] = f->x[0];   // x[n-1] = old x[n]
-    f->x[0] = input_sample; // x[n]   = new sample
-
-    // shift output delay
-    f->y[2] = f->y[1]; // y[n-2] = old y[n-1]
-    f->y[1] = f->y[0]; // y[n-1] = old y[n]
-
-    double filtered_output = f->b[0] * f->x[0] + f->b[1] * f->x[1] + f->b[2] * f->x[2] - f->a[1] * f->y[1];
-
-    f->y[0] = filtered_output;
-    return filtered_output;
+    double output = f->b[0] * input_sample + f->x[0];
+    
+    // update delay lines
+    f->x[0] = f->b[1] * input_sample - f->a[1] * output + f->x[1];
+    f->x[1] = f->b[2] * input_sample - f->a[2] * output;
+    
+    return output;
 }
 
 // initialize STA/LTA (Short-Term Average / Long-Term Average) detector used for detecting transient events like earthquake P-waves
