@@ -6,164 +6,88 @@
     <title>🌍 Disaster Monitor - Live Events</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@600;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #0a1a2f;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            color: white;
-            margin-bottom: 10px;
-        }
-
-        .description {
-            text-align: center;
-            color: #ccc;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        .button-panel {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            background: #1e2a3a;
-            border: none;
-            padding: 10px 22px;
-            border-radius: 40px;
-            cursor: pointer;
-            color: white;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-
-        .btn.active {
-            background: #ff6b35;
-            box-shadow: 0 0 12px rgba(255, 107, 53, 0.5);
-        }
-
-        .btn:hover {
-            background: #ff8c5a;
-            transform: translateY(-2px);
-        }
-
-        #map {
-            height: 550px;
-            width: 100%;
-            max-width: 1300px;
-            margin: 0 auto;
-            border-radius: 24px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .status {
-            text-align: center;
-            margin-top: 12px;
-            color: #aaa;
-            font-size: 12px;
-        }
-
-        .legend {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 15px;
-            border-radius: 20px;
-            color: white;
-            font-size: 12px;
-            z-index: 1000;
-        }
-
-        .legend span {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 12px;
-            margin-right: 5px;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0a1a2f; padding: 20px; }
+        h1 { text-align: center; color: white; margin-bottom: 10px; }
+        .description { text-align: center; color: #ccc; margin-bottom: 20px; font-size: 14px; }
+        .button-panel { display: flex; justify-content: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn { background: #1e2a3a; border: none; padding: 10px 22px; border-radius: 40px; cursor: pointer; color: white; font-weight: bold; transition: 0.2s; }
+        .btn.active { background: #ff6b35; box-shadow: 0 0 12px rgba(255,107,53,0.5); }
+        .btn:hover { background: #ff8c5a; transform: translateY(-2px); }
+        #map { height: 550px; width: 100%; max-width: 1300px; margin: 0 auto; border-radius: 24px; border: 2px solid rgba(255,255,255,0.3); }
+        .status { text-align: center; margin-top: 12px; color: #aaa; font-size: 12px; }
+        .legend { position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.7); padding: 8px 15px; border-radius: 20px; color: white; font-size: 12px; z-index: 1000; }
+        .legend span { display: inline-block; width: 12px; height: 12px; border-radius: 12px; margin-right: 5px; }
     </style>
 </head>
 
 <body>
-    <h1>⚠️ SISTEM DE PREVENȚIE DEZASTRE ⚠️</h1>
-    <div class="description">🔴 date LIVE din backend-ul C + server HTTP | evenimente seismice, hidro, meteo</div>
-    <div class="button-panel">
-        <button class="btn active" data-filter="all">🌍 TOATE</button>
-        <button class="btn" data-filter="earthquake">🏔️ Cutremur</button>
-        <button class="btn" data-filter="flood">🌊 Inundație</button>
-        <button class="btn" data-filter="tsunami">🌊🌊 Tsunami</button>
-        <button class="btn" data-filter="tornado">🌀 Tornadă</button>
-        <button class="btn" data-filter="drought">🔥 Secetă</button>
-    </div>
-    <div id="map"></div>
-    <div class="status" id="statusText">🔄 aștept date de la server...</div>
-    <div class="legend"><span style="background:#2ecc71;"></span> normal <span style="background:#f39c12;"></span>
-        elevated <span style="background:#e67e22;"></span> high <span style="background:#e74c3c;"></span> critical</div>
+<h1>⚠️ SISTEM DE PREVENȚIE DEZASTRE ⚠️</h1>
+<div class="description">🔴 date LIVE din backend-ul C + server HTTP | evenimente seismice, hidro, meteo</div>
+<div class="button-panel">
+    <button class="btn active" data-filter="all">🌍 TOATE</button>
+    <button class="btn" data-filter="earthquake">🏔️ Cutremur</button>
+    <button class="btn" data-filter="flood">🌊 Inundație</button>
+    <button class="btn" data-filter="tsunami">🌊🌊 Tsunami</button>
+    <button class="btn" data-filter="tornado">🌀 Tornadă</button>
+    <button class="btn" data-filter="drought">🔥 Secetă</button>
+</div>
+<div id="map"></div>
+<div class="status" id="statusText">🔄 aștept date de la server...</div>
+<div class="legend"><span style="background:#2ecc71;"></span> normal <span style="background:#f39c12;"></span> elevated <span style="background:#e67e22;"></span> high <span style="background:#e74c3c;"></span> critical</div>
 
-    <script>
-        const map = L.map('map').setView([20.0, 0.0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+<script>
+    const map = L.map('map').setView([34.05, -118.25], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
-        let currentLayer = null;
-        let currentFilter = 'all';
+    let currentLayer = null;
+    let currentFilter = 'all';
 
-        function getColorByRisk(risk) {
-            switch (risk) {
-                case 'critical': return '#e74c3c';
-                case 'high': return '#e67e22';
-                case 'elevated': return '#f39c12';
-                default: return '#2ecc71';
-            }
+    function getColorByRisk(risk) {
+        switch(risk) {
+            case 'critical': return '#e74c3c';
+            case 'high': return '#e67e22';
+            case 'elevated': return '#f39c12';
+            default: return '#2ecc71';
         }
+    }
 
-        function getIconByType(type, risk) {
-            const color = getColorByRisk(risk);
-            return L.divIcon({
-                html: `<div style="background:${color}; width:18px; height:18px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px ${color};"></div>`,
-                iconSize: [18, 18],
-                className: 'custom-marker'
-            });
-        }
+    function getIconByType(type, risk) {
+        const color = getColorByRisk(risk);
+        return L.divIcon({
+            html: `<div style="background:${color}; width:18px; height:18px; border-radius:50%; border:2px solid white; box-shadow:0 0 10px ${color};"></div>`,
+            iconSize: [18, 18],
+            className: 'custom-marker'
+        });
+    }
 
-        function fetchAndDisplay() {
-            fetch('http://localhost:8080?t=' + Date.now())
-                .then(res => res.json())
-                .then(data => {
-                    if (currentLayer) map.removeLayer(currentLayer);
-                    const events = data.events || [];
-                    document.getElementById('statusText').innerHTML = `📡 ${events.length} evenimente active · ultima actualizare: ${new Date().toLocaleTimeString()}`;
-
-                    const filtered = events.filter(ev => currentFilter === 'all' || ev.type === currentFilter);
-                    const group = L.layerGroup();
-
-                    filtered.forEach(ev => {
-                        const color = getColorByRisk(ev.risk);
-                        const radius = ev.affected_radius * 20000;
-                        // cerc zona afectata
-                        const circle = L.circle([ev.latitude, ev.longitude], {
-                            radius: radius,
-                            color: color,
-                            weight: 2,
-                            fillColor: color,
-                            fillOpacity: 0.25
-                        }).bindPopup(`
+    function fetchAndDisplay() {
+        fetch('http://localhost:8080')
+            .then(res => res.json())
+            .then(data => {
+                if (currentLayer) map.removeLayer(currentLayer);
+                const events = data.events || [];
+                document.getElementById('statusText').innerHTML = `📡 ${events.length} evenimente active · ultima actualizare: ${new Date().toLocaleTimeString()}`;
+                
+                const filtered = events.filter(ev => currentFilter === 'all' || ev.type === currentFilter);
+                const group = L.layerGroup();
+                
+                filtered.forEach(ev => {
+                    const color = getColorByRisk(ev.risk);
+                    const radius = Math.min(ev.affected_radius * 800, 350000);
+                    
+                    // cerc zona afectata
+                    const circle = L.circle([ev.latitude, ev.longitude], {
+                        radius: radius,
+                        color: color,
+                        weight: 2,
+                        fillColor: color,
+                        fillOpacity: 0.25
+                    }).bindPopup(`
                         <b>${ev.type.toUpperCase()}</b><br>
                         ⚠️ Risk: ${ev.risk}<br>
                         📊 Probabilitate: ${(ev.probability * 100).toFixed(1)}%<br>
@@ -171,47 +95,47 @@
                         🎯 Rază afectată: ${ev.affected_radius.toFixed(0)} km<br>
                         🕒 Detectat: ${new Date(ev.detection_time * 1000).toLocaleString()}
                     `);
-
-                        // marker centru
-                        const marker = L.marker([ev.latitude, ev.longitude], {
-                            icon: getIconByType(ev.type, ev.risk)
-                        }).bindPopup(`
+                    
+                    // marker centru
+                    const marker = L.marker([ev.latitude, ev.longitude], {
+                        icon: getIconByType(ev.type, ev.risk)
+                    }).bindPopup(`
                         <b>🔥 ${ev.type}</b><br>
                         <span style="color:${color}">${ev.risk.toUpperCase()}</span><br>
-                        ⚡ prob: ${(ev.probability * 100).toFixed(0)}%
+                        ⚡ prob: ${(ev.probability*100).toFixed(0)}%
                     `);
-
-                        group.addLayer(circle);
-                        group.addLayer(marker);
-                    });
-
-                    group.addTo(map);
-                    currentLayer = group;
-
-                    if (filtered.length > 0) {
-                        const bounds = group.getBounds();
-                        if (bounds.isValid()) map.fitBounds(bounds);
-                    }
-                })
-                .catch(err => {
-                    console.error('Eroare fetch:', err);
-                    document.getElementById('statusText').innerHTML = '❌ Nu se poate conecta la server. Rulează backend-ul C.';
+                    
+                    group.addLayer(circle);
+                    group.addLayer(marker);
                 });
-        }
-
-        // filtrare la click butoane
-        document.querySelectorAll('.btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentFilter = btn.getAttribute('data-filter');
-                fetchAndDisplay();
+                
+                group.addTo(map);
+                currentLayer = group;
+                
+                if (filtered.length > 0) {
+                    const bounds = group.getBounds();
+                    if (bounds.isValid()) map.fitBounds(bounds);
+                }
+            })
+            .catch(err => {
+                console.error('Eroare fetch:', err);
+                document.getElementById('statusText').innerHTML = '❌ Nu se poate conecta la server. Rulează backend-ul C.';
             });
-        });
+    }
 
-        fetchAndDisplay();
-        setInterval(fetchAndDisplay, 5000);
-    </script>
+    // filtrare la click butoane
+    document.querySelectorAll('.btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.getAttribute('data-filter');
+            fetchAndDisplay();
+        });
+    });
+
+    fetchAndDisplay();
+    setInterval(fetchAndDisplay, 5000);
+</script>
 </body>
 
 </html>
