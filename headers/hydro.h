@@ -70,5 +70,6 @@ void flood_destroy(flood_monitor *monitor);
 void tsunami_init(tsunami_monitor *monitor, const tsunami_config *config, const tsunami_limits *limits, event_callback callback);
 void tsunami_feed_sea_level(tsunami_monitor *monitor, double sea_level_m, time_t timestamp);
 void tsunami_destroy(tsunami_monitor *monitor);
+void flood_trigger_event(flood_monitor *monitor, double probability);
 
 #endif

@@ -81,6 +81,7 @@ static void emit_tsunami_event(tsunami_monitor *monitor, double probability, dou
 // flood monitor initialization
 void flood_init(flood_monitor *monitor, const watershed_config *config, const flood_limits *limits, event_callback callback) {
     memset(monitor, 0, sizeof(*monitor));
+    monitor->last_flood_alert = time(NULL);
 
     monitor->config = *config;
     monitor->limits = limits ? *limits : default_flood_limits;
@@ -214,3 +215,31 @@ void tsunami_feed_sea_level(tsunami_monitor *monitor, double sea_level_m, time_t
 }
 
 void tsunami_destroy(tsunami_monitor *monitor) {}
+void flood_trigger_event(flood_monitor *monitor, double probability)
+{
+    if (!monitor || !monitor->callback) return;
+
+    event e;
+    memset(&e, 0, sizeof(e));
+
+    e.type = event_flood;
+    e.probability = probability;
+    e.magnitude = probability * 10.0;
+
+    e.latitude = monitor->config.latitude;
+    e.longitude = monitor->config.longitude;
+
+    e.detection_time = time(NULL);
+    e.estimated_arrival = 0;
+    e.expiry = e.detection_time + 3600;
+
+    e.affected_radius = probability * 50.0;
+
+    e.risk =
+        (probability > 0.75) ? risk_critical :
+        (probability > 0.50) ? risk_high :
+        (probability > 0.25) ? risk_elevated :
+                               risk_normal;
+
+    monitor->callback(&e);
+}
