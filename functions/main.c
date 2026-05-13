@@ -1,7 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <time.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#define usleep(usec) Sleep((usec) / 1000)
+#else
+#include <unistd.h>
+#include <pthread.h>
+#endif
+
 #include "types.h"
 #include "seismic.h"
 #include "meteorological.h"
@@ -10,8 +18,10 @@
 //+++
 #include "../Data/data_ingestor.h"
 #include "../Data/data_parser.h"
+#include "../server.h"
 
-
+double global_earthquake_risk = 0.0;
+double global_flood_risk = 0.0;
 // global predictor for all subsystems to share
 static predictor global_predictor;
 
@@ -25,6 +35,7 @@ void on_event(const event *e) {
     switch (e->type) {
         case event_earthquake:
             predictor_update_earthquake(&global_predictor, e->probability);
+            global_earthquake_risk = e->probability; 
             break;
         case event_tornado:
             predictor_update_tornado(&global_predictor, e->probability);
@@ -34,6 +45,7 @@ void on_event(const event *e) {
             break;
         case event_flood:
             predictor_update_flood(&global_predictor, e->probability);
+            global_flood_risk = e->probability;
             break;
         case event_tsunami:
             predictor_update_tsunami(&global_predictor, e->probability);
@@ -42,6 +54,18 @@ void on_event(const event *e) {
             break;
     }
 }
+
+#ifdef _WIN32
+DWORD WINAPI server_thread(LPVOID arg) {
+    start_server();
+    return 0;
+}
+#else
+void* server_thread(void* arg) {
+    start_server();
+    return NULL;
+}
+#endif
 
 int main(void) {
     // init predictor
@@ -91,6 +115,16 @@ int main(void) {
     tsunami_monitor tsunami;
     tsunami_init(&tsunami, &ts_cfg, NULL, on_event);
 
+        // 3. Pornire Thread în mod securizat în funcție de OS
+    #ifdef _WIN32
+        CreateThread(NULL, 0, server_thread, NULL, 0, NULL);
+    #else
+        pthread_t thread_id;
+        pthread_create(&thread_id, NULL, server_thread, NULL);
+        pthread_detach(thread_id); // Lasă thread-ul să ruleze independent
+    #endif
+
+    printf("Sistemul de monitorizare a pornit cu succes.\n");
 
     while (1) {
     time_t now = time(NULL);
@@ -123,6 +157,9 @@ int main(void) {
     static time_t last_assessment = 0;
     if (now - last_assessment >= 60) {
         predictor_assess(&global_predictor, 34.05, -118.25, now);
+        if (global_earthquake_risk > 0.75 || global_flood_risk > 0.75) {
+            printf("[ALERTA CRITICA] Risc iminent detectat la coordonatele specificate!\n");
+        }
         predictor_reset(&global_predictor);
         last_assessment = now;
     }

@@ -1,37 +1,19 @@
 {
     "configurations": [
         {
-<<<<<<< Updated upstream
-            "name": "Win32",
-            "includePath": [
-                "${workspaceFolder}/headers",
-                "${workspaceFolder}/functions"
-            ],
-            "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
-            ],
-            "compilerPath": "C:\\msys64\\mingw64\\bin\\gcc.exe",
-            "cStandard": "c17",
-=======
             "name": "Mingw64",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/mingw64/include",
-                "C:/mingw64/x86_64-w64-mingw32/include"
+                "${workspaceFolder}/headers",
+                "${workspaceFolder}/functions",
+                "C:/msys64/mingw64/include"
             ],
             "defines": [],
-            "compilerPath": "C:/mingw64/bin/gcc.exe",
+            "compilerPath": "C:/msys64/mingw64/bin/gcc.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
->>>>>>> Stashed changes
             "intelliSenseMode": "gcc-x64"
         }
     ],
     "version": 4
-<<<<<<< Updated upstream
 }
-=======
-}
->>>>>>> Stashed changes
