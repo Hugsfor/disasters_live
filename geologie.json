@@ -1,0 +1,102 @@
+[
+  {
+    "location": "Mariana Trench",
+    "country": "Pacific Ocean",
+    "quake_mag": 8.1,
+    "depth_km": 10.9,
+    "plate_speed_cm_year": 15.2,
+    "is_oceanic": 1,
+    "fault_type": "subduction",
+    "risk_level": "extreme"
+  },
+  {
+    "location": "San Andreas Fault",
+    "country": "USA",
+    "quake_mag": 4.5,
+    "depth_km": 15.0,
+    "plate_speed_cm_year": 35.5,
+    "is_oceanic": 0,
+    "fault_type": "transform",
+    "risk_level": "high"
+  },
+  {
+    "location": "Himalayan Belt",
+    "country": "Nepal / India",
+    "quake_mag": 7.8,
+    "depth_km": 25.0,
+    "plate_speed_cm_year": 20.1,
+    "is_oceanic": 0,
+    "fault_type": "collision",
+    "risk_level": "extreme"
+  },
+  {
+    "location": "Japan Trench",
+    "country": "Japan",
+    "quake_mag": 7.2,
+    "depth_km": 35.4,
+    "plate_speed_cm_year": 10.8,
+    "is_oceanic": 1,
+    "fault_type": "subduction",
+    "risk_level": "extreme"
+  },
+  {
+    "location": "Mid-Atlantic Ridge",
+    "country": "Atlantic Ocean",
+    "quake_mag": 3.9,
+    "depth_km": 8.0,
+    "plate_speed_cm_year": 2.5,
+    "is_oceanic": 1,
+    "fault_type": "divergent",
+    "risk_level": "low"
+  },
+  {
+    "location": "Andes Subduction Zone",
+    "country": "Chile / Peru",
+    "quake_mag": 6.9,
+    "depth_km": 45.0,
+    "plate_speed_cm_year": 8.7,
+    "is_oceanic": 0,
+    "fault_type": "subduction",
+    "risk_level": "high"
+  },
+  {
+    "location": "Alpide Belt",
+    "country": "Turkey / Iran",
+    "quake_mag": 7.5,
+    "depth_km": 30.2,
+    "plate_speed_cm_year": 12.0,
+    "is_oceanic": 0,
+    "fault_type": "collision",
+    "risk_level": "extreme"
+  },
+  {
+    "location": "Iceland Rift Zone",
+    "country": "Iceland",
+    "quake_mag": 5.2,
+    "depth_km": 5.0,
+    "plate_speed_cm_year": 3.0,
+    "is_oceanic": 1,
+    "fault_type": "divergent",
+    "risk_level": "medium"
+  },
+  {
+    "location": "Sumatra Subduction Zone",
+    "country": "Indonesia",
+    "quake_mag": 8.6,
+    "depth_km": 20.0,
+    "plate_speed_cm_year": 11.3,
+    "is_oceanic": 1,
+    "fault_type": "subduction",
+    "risk_level": "extreme"
+  },
+  {
+    "location": "East African Rift",
+    "country": "Ethiopia / Kenya",
+    "quake_mag": 4.8,
+    "depth_km": 12.0,
+    "plate_speed_cm_year": 6.1,
+    "is_oceanic": 0,
+    "fault_type": "divergent",
+    "risk_level": "medium"
+  }
+]
