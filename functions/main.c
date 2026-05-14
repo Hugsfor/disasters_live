@@ -34,9 +34,11 @@ void on_event(const event *e) {
             break;
         case event_tornado:
             predictor_update_tornado(&global_predictor, e->probability);
-            push_global_event("tornado",
-                e->latitude, e->longitude,
-                e->probability, e->magnitude, e->affected_radius);
+            /* DO NOT push here — this callback fires from weather_check_tornado()
+               which uses the local Moldova station coordinates (47.01, 28.86),
+               placing a fake tornado in Moldova every 5 minutes.
+               Real tornado events with correct coordinates come from
+               parse_noaa_alerts() and parse_gdacs_json(). */
             break;
         case event_drought:
             predictor_update_drought(&global_predictor, e->probability);
@@ -144,7 +146,9 @@ int main(void) {
             if (json_data)  { parse_and_process(json_data, &seismo, &weather, &flood); free(json_data); }
             if (quake_data) { parse_earthquake_data(quake_data, &seismo); free(quake_data); }
 
-            weather_check_tornado(&weather, now);
+            /* weather_check_tornado removed — it fires on_event with Moldova coords,
+               causing a fake tornado at 47.01N 28.86E every cycle.
+               Tornado data comes from NOAA (every 60s) and GDACS (every 600s). */
             weather_check_drought(&weather, now);
             last_fast = now;
         }
