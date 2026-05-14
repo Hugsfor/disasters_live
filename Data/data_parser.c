@@ -12,7 +12,7 @@
 #include "../headers/hydro.h"
 
 // Write an event directly into the shared list the server reads.
-static void push_global_event(const char *type,
+void push_global_event(const char *type,
                                double lat, double lon,
                                double probability,
                                double magnitude,

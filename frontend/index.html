@@ -159,45 +159,6 @@
             margin: 4px 0;
         }
 
-        /* ── RIGHT TOOLBAR ── */
-        .toolbar {
-            position: fixed;
-            top: 14px;
-            right: 14px;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .tool-btn {
-            width: 40px;
-            height: 40px;
-            background: rgba(15, 24, 36, 0.92);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: #8ab0d4;
-            font-size: 17px;
-            transition: all 0.15s;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
-        }
-        .tool-btn:hover {
-            background: rgba(30, 50, 75, 0.95);
-            color: #fff;
-            transform: translateY(-1px);
-        }
-
-        .tool-divider {
-            width: 40px;
-            height: 1px;
-            background: rgba(255,255,255,0.1);
-        }
-
         /* ── BOTTOM TIME PLAYER ── */
         .time-player {
             position: fixed;
@@ -410,64 +371,43 @@
 <!-- LEFT SIDEBAR -->
 <div class="sidebar">
     <div class="sidebar-header">
-        <span>Hărți</span>
+        <span>Evenimente</span>
         <button title="Minimizează">⌃</button>
     </div>
 
-    <div class="sidebar-item active" data-layer="satellite">
+    <div class="sidebar-item active" data-filter="all">
         <span class="check">✓</span>
-        <span class="icon">🛰️</span>
-        Satelit
+        <span class="icon">📡</span>
+        Toate
     </div>
-    <div class="sidebar-sub active">Live</div>
-    <div class="sidebar-sub">HD</div>
 
     <div class="sidebar-divider"></div>
 
-    <div class="sidebar-item" data-filter="all">
+    <div class="sidebar-item" data-filter="earthquake">
         <span class="check">✓</span>
-        <span class="icon">📡</span>
-        Radar
+        <span class="icon">🌍</span>
+        Cutremur
     </div>
     <div class="sidebar-item" data-filter="flood">
         <span class="check">✓</span>
-        <span class="icon">🌧️</span>
-        Precipitații
+        <span class="icon">🌊</span>
+        Inundație
     </div>
     <div class="sidebar-item" data-filter="tornado">
         <span class="check">✓</span>
-        <span class="icon">💨</span>
-        Vânt
-    </div>
-    <div class="sidebar-item" data-filter="drought">
-        <span class="check">✓</span>
-        <span class="icon">🌡️</span>
-        Temperatură
-    </div>
-    <div class="sidebar-item" data-filter="earthquake">
-        <span class="check">✓</span>
-        <span class="icon">💧</span>
-        Umiditate
+        <span class="icon">🌪️</span>
+        Tornadă
     </div>
     <div class="sidebar-item" data-filter="tsunami">
         <span class="check">✓</span>
-        <span class="icon">🔵</span>
-        Presiune
+        <span class="icon">🏄</span>
+        Tsunami
     </div>
-</div>
-
-<!-- RIGHT TOOLBAR -->
-<div class="toolbar">
-    <div class="tool-btn" title="Căutare">🔍</div>
-    <div class="tool-divider"></div>
-    <div class="tool-btn" title="Setări">⚙️</div>
-    <div class="tool-btn" title="Informații">ℹ️</div>
-    <div class="tool-btn" title="Share">↗️</div>
-    <div class="tool-divider"></div>
-    <div class="tool-btn" title="Straturi">🗂️</div>
-    <div class="tool-btn" title="Localizare" id="locateBtn">🎯</div>
-    <div class="tool-divider"></div>
-    <div class="tool-btn" title="Mai mult">•••</div>
+    <div class="sidebar-item" data-filter="drought">
+        <span class="check">✓</span>
+        <span class="icon">☀️</span>
+        Secetă
+    </div>
 </div>
 
 <!-- ZOOM CONTROLS -->
@@ -546,11 +486,6 @@
     // Custom zoom buttons
     document.getElementById('zoomIn').onclick = () => map.zoomIn();
     document.getElementById('zoomOut').onclick = () => map.zoomOut();
-
-    // Locate button
-    document.getElementById('locateBtn').onclick = () => {
-        map.locate({ setView: true, maxZoom: 10 });
-    };
 
     // ── SIDEBAR LAYER SWITCHING ──
     let currentFilter = 'all';

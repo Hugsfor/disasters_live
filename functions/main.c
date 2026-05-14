@@ -28,11 +28,29 @@ static predictor global_predictor;
 
 void on_event(const event *e) {
     switch (e->type) {
-        case event_earthquake: predictor_update_earthquake(&global_predictor, e->probability); global_earthquake_risk = e->probability; break;
-        case event_tornado:    predictor_update_tornado(&global_predictor, e->probability);    break;
-        case event_drought:    predictor_update_drought(&global_predictor, e->probability);    break;
-        case event_flood:      predictor_update_flood(&global_predictor, e->probability);      global_flood_risk = e->probability; break;
-        case event_tsunami:    predictor_update_tsunami(&global_predictor, e->probability);    break;
+        case event_earthquake:
+            predictor_update_earthquake(&global_predictor, e->probability);
+            global_earthquake_risk = e->probability;
+            break;
+        case event_tornado:
+            predictor_update_tornado(&global_predictor, e->probability);
+            push_global_event("tornado",
+                e->latitude, e->longitude,
+                e->probability, e->magnitude, e->affected_radius);
+            break;
+        case event_drought:
+            predictor_update_drought(&global_predictor, e->probability);
+            break;
+        case event_flood:
+            predictor_update_flood(&global_predictor, e->probability);
+            global_flood_risk = e->probability;
+            break;
+        case event_tsunami:
+            predictor_update_tsunami(&global_predictor, e->probability);
+            push_global_event("tsunami",
+                e->latitude, e->longitude,
+                e->probability, e->magnitude, e->affected_radius);
+            break;
         default: break;
     }
 }

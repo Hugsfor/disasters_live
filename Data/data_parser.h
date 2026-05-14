@@ -5,6 +5,10 @@
 #include "../headers/meteorological.h"
 #include "../headers/hydro.h"
 
+void push_global_event(const char *type, double lat, double lon,
+                       double probability, double magnitude,
+                       double affected_radius_km);
+
 void parse_and_process(const char *raw_json,
                        seismic_monitor *seismo,
                        weather_monitor *weather,
