@@ -3,7 +3,7 @@ REM Run this from the ROOT of your project (where server.c is)
 REM Requires: MSYS2 with mingw64, libcurl, cJSON installed
 
 cd /d "%~dp0"
-cd ..
+
 
 gcc -Wall ^
   functions/main.c ^
