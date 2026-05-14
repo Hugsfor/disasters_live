@@ -1,601 +1,671 @@
 <!DOCTYPE html>
 <html lang="ro">
-
 <head>
     <meta charset="UTF-8">
-    <title>Disaster Monitor</title>
+    <title>Disaster Monitor - Live Events</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@600;800&display=swap"
-        rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        :root {
-            --bg: #07111f;
-            --panel: #b670c9;
-            --border: rgba(80, 25, 87, 0.08);
-            --accent: #ff6b35;
-            --normal: #2ecc71;
-            --elevated: #f39c12;
-            --high: #e67e22;
-            --critical: #e74c3c;
-            --text: #c8d8e8;
-            --muted: #8899aa;
-            --font-mono: 'JetBrains Mono', monospace;
-            --font-ui: 'Syne', sans-serif;
-        }
-
         body {
-            font-family: var(--font-mono);
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            background: #000;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            color: #fff;
         }
 
-        /* ── HEADER ── */
-        header {
-            padding: 14px 24px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--panel);
-            flex-wrap: wrap;
-            gap: 10px;
+        /* ── FULL-SCREEN MAP ── */
+        #map {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
         }
 
+        /* ── TOP-LEFT LOGO ── */
         .logo {
-            font-family: var(--font-ui);
-            font-weight: 800;
-            font-size: 18px;
-            letter-spacing: 0.02em;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .live-dot {
-            width: 9px;
-            height: 9px;
-            background: var(--accent);
-            border-radius: 50%;
-            animation: pulse-dot 1.4s ease-in-out infinite;
-        }
-
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(255,107,53,0.6); }
-            50%       { opacity: 0.85; transform: scale(1.2); box-shadow: 0 0 0 5px rgba(255,107,53,0); }
-        }
-
-        .stats-bar {
-            display: flex;
-            gap: 20px;
-            font-size: 11px;
-            color: var(--muted);
-        }
-
-        .stat-item strong {
-            color: #fff;
-            font-size: 13px;
-        }
-
-        /* ── FILTER BAR ── */
-        .filter-bar {
-            padding: 12px 24px;
-            border-bottom: 1px solid var(--border);
-            background: var(--bg);
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 100;
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-wrap: wrap;
+            background: rgba(22, 33, 48, 0.92);
+            border-radius: 12px;
+            padding: 8px 14px;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.08);
         }
-
-        .filter-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-            color: var(--muted);
-            margin-right: 4px;
+        .logo-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #1a6cff, #00c4ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
         }
-
-        .btn {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            padding: 7px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            color: var(--text);
-            font-family: var(--font-mono);
-            font-size: 12px;
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+        .logo-text span:first-child {
+            font-size: 11px;
             font-weight: 700;
-            transition: all 0.15s;
-            letter-spacing: 0.03em;
-        }
-
-        .btn.active {
-            background: var(--accent);
-            border-color: var(--accent);
+            letter-spacing: 0.08em;
             color: #fff;
-            box-shadow: 0 0 14px rgba(255,107,53,0.35);
+        }
+        .logo-text span:last-child {
+            font-size: 9px;
+            color: #7a9bc0;
+            font-weight: 500;
+            letter-spacing: 0.05em;
         }
 
-        .btn:hover:not(.active) {
-            border-color: rgba(255,255,255,0.25);
+        /* ── LEFT SIDEBAR ── */
+        .sidebar {
+            position: fixed;
+            top: 70px;
+            left: 14px;
+            z-index: 100;
+            background: rgba(15, 24, 36, 0.92);
+            border-radius: 14px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08);
+            width: 175px;
+            overflow: hidden;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .sidebar-header span {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: #8ab0d4;
+            text-transform: uppercase;
+        }
+        .sidebar-header button {
+            background: none;
+            border: none;
+            color: #8ab0d4;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 2px;
+            transition: color 0.2s;
+        }
+        .sidebar-header button:hover { color: #fff; }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 14px;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 13px;
+            font-weight: 400;
+            color: #b0c8e0;
+            position: relative;
+        }
+        .sidebar-item:hover { background: rgba(255,255,255,0.06); }
+        .sidebar-item.active {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .sidebar-item .check {
+            position: absolute;
+            left: 5px;
+            font-size: 10px;
+            color: #fff;
+            opacity: 0;
+        }
+        .sidebar-item.active .check { opacity: 1; }
+        .sidebar-item .icon {
+            font-size: 15px;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .sidebar-sub {
+            padding: 4px 14px 4px 44px;
+            font-size: 11px;
+            color: #6a8faa;
+            cursor: pointer;
+            transition: color 0.15s;
+        }
+        .sidebar-sub:hover { color: #b0c8e0; }
+        .sidebar-sub.active { color: #fff; }
+
+        .sidebar-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.06);
+            margin: 4px 0;
+        }
+
+        /* ── RIGHT TOOLBAR ── */
+        .toolbar {
+            position: fixed;
+            top: 14px;
+            right: 14px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(15, 24, 36, 0.92);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #8ab0d4;
+            font-size: 17px;
+            transition: all 0.15s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+        }
+        .tool-btn:hover {
+            background: rgba(30, 50, 75, 0.95);
             color: #fff;
             transform: translateY(-1px);
         }
 
-        /* ── MAIN LAYOUT ── */
-        .main {
-            flex: 1;
+        .tool-divider {
+            width: 40px;
+            height: 1px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* ── BOTTOM TIME PLAYER ── */
+        .time-player {
+            position: fixed;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: rgba(10, 18, 28, 0.93);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 40px;
+            backdrop-filter: blur(14px);
+            padding: 10px 20px;
             display: flex;
-            gap: 0;
-            overflow: hidden;
-            min-height: 0;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+            min-width: 300px;
+            justify-content: center;
         }
 
-        #map {
-            flex: 1;
-            min-height: 520px;
-            position: relative;
+        .play-btn {
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.12);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #fff;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s;
+            flex-shrink: 0;
+        }
+        .play-btn:hover { background: rgba(255,255,255,0.22); }
+
+        .time-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        /* ── SIDEBAR ── */
-        .sidebar {
-            width: 300px;
-            background: var(--panel);
-            border-left: 1px solid var(--border);
+        .time-date {
+            font-size: 14px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .time-clock {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .time-segment {
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-        }
-
-        .sidebar-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-            font-size: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-            color: var(--muted);
-            display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 1px;
         }
-
-        .event-list {
-            flex: 1;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
-        }
-
-        .event-item {
-            padding: 10px 16px;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-            transition: background 0.12s;
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-        }
-
-        .event-item:hover { background: rgba(255,255,255,0.04); }
-
-        .event-item.new-event { animation: flash-in 0.6s ease; }
-
-        @keyframes flash-in {
-            0%   { background: rgba(255,107,53,0.25); }
-            100% { background: transparent; }
-        }
-
-        .event-icon { font-size: 18px; line-height: 1; flex-shrink: 0; }
-
-        .event-meta { flex: 1; min-width: 0; }
-
-        .event-type {
-            font-family: var(--font-ui);
-            font-size: 12px;
+        .time-segment span {
+            font-size: 13px;
             font-weight: 600;
             color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            line-height: 1;
         }
-
-        .event-coords {
-            font-size: 10px;
-            color: var(--muted);
-            margin-top: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .event-risk {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            padding: 2px 6px;
-            border-radius: 3px;
-            flex-shrink: 0;
-            align-self: center;
-        }
-
-        .risk-critical { background: rgba(231,76,60,0.2);  color: var(--critical); }
-        .risk-high     { background: rgba(230,126,34,0.2); color: var(--high); }
-        .risk-elevated { background: rgba(243,156,18,0.2); color: var(--elevated); }
-        .risk-normal   { background: rgba(46,204,113,0.15); color: var(--normal); }
-
-        /* ── FOOTER ── */
-        .footer {
-            padding: 8px 24px;
-            border-top: 1px solid var(--border);
-            background: var(--panel);
-            font-size: 11px;
-            color: var(--muted);
+        .time-arrows {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 1px;
+        }
+        .time-arrows button {
+            background: none;
+            border: none;
+            color: #6a8faa;
+            font-size: 8px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            transition: color 0.15s;
+        }
+        .time-arrows button:hover { color: #fff; }
+
+        .time-sep {
+            font-size: 14px;
+            color: #6a8faa;
+            font-weight: 600;
+        }
+
+        .next-btn {
+            width: 28px;
+            height: 28px;
+            background: rgba(255,255,255,0.08);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            color: #8ab0d4;
+            font-size: 14px;
+            display: flex;
             align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
+            justify-content: center;
+            transition: all 0.15s;
         }
+        .next-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
 
-        .status-ok   { color: var(--normal); }
-        .status-err  { color: var(--critical); }
-        .status-wait { color: var(--muted); }
-
-        /* ── MAP LEGEND ── */
-        .legend {
-            position: absolute;
-            bottom: 30px;
-            left: 10px;
-            background: rgba(108,62,128,0.85);
-            border: 1px solid var(--border);
-            padding: 8px 12px;
-            border-radius: 8px;
-            color: var(--text);
+        /* ── STATUS BAR bottom-left ── */
+        .status-bar {
+            position: fixed;
+            bottom: 18px;
+            left: 14px;
+            z-index: 100;
             font-size: 11px;
-            z-index: 1000;
-            backdrop-filter: blur(6px);
-            line-height: 1.8;
+            color: rgba(255,255,255,0.5);
         }
 
-        .legend-row { display: flex; align-items: center; gap: 7px; }
-        .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-
-        /* ── LEAFLET POPUP ── */
-        .leaflet-popup-content-wrapper {
-            background: #1a0a2e;
-            color: var(--text);
-            border: 1px solid rgba(180,100,210,0.4);
-            border-radius: 8px;
-            font-family: var(--font-mono);
-            font-size: 12px;
-        }
-        .leaflet-popup-tip { background: #1a0a2e; }
-
-        /* ── PULSE MARKER ── */
-        @keyframes pulse-ring {
-            0%   { transform: translate(-50%,-50%) scale(0.8); opacity: 0.6; }
-            100% { transform: translate(-50%,-50%) scale(2.8); opacity: 0; }
-        }
-
-        /* ── TOGGLE ── */
-        .refresh-toggle {
+        /* ── STATUS BAR bottom-right (coords) ── */
+        .coords-bar {
+            position: fixed;
+            bottom: 18px;
+            right: 14px;
+            z-index: 100;
+            font-size: 11px;
+            color: rgba(255,255,255,0.45);
             display: flex;
             align-items: center;
             gap: 6px;
-            cursor: pointer;
-            user-select: none;
         }
 
-        .toggle-track {
-            width: 30px; height: 16px;
-            background: var(--panel);
-            border: 1px solid var(--border);
+        /* ── ZOOM CONTROLS ── */
+        .zoom-controls {
+            position: fixed;
+            bottom: 70px;
+            right: 14px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .zoom-btn {
+            width: 40px;
+            height: 36px;
+            background: rgba(15, 24, 36, 0.92);
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 8px;
-            position: relative;
-            transition: background 0.2s;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #8ab0d4;
+            font-size: 20px;
+            font-weight: 300;
+            transition: all 0.15s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
         }
+        .zoom-btn:hover { background: rgba(30, 50, 75, 0.95); color: #fff; }
 
-        .toggle-track.on { background: var(--accent); border-color: var(--accent); }
+        /* Leaflet overrides */
+        .leaflet-control-zoom { display: none; }
+        .leaflet-control-attribution { display: none; }
 
-        .toggle-thumb {
-            width: 10px; height: 10px;
-            background: #fff;
-            border-radius: 50%;
-            position: absolute;
-            top: 2px; left: 2px;
-            transition: left 0.2s;
+        /* Custom popup */
+        .leaflet-popup-content-wrapper {
+            background: rgba(10, 20, 35, 0.95);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            color: #dce8f5;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
+        .leaflet-popup-tip { background: rgba(10, 20, 35, 0.95); }
+        .leaflet-popup-close-button { color: #8ab0d4 !important; }
 
-        .toggle-track.on .toggle-thumb { left: 16px; }
+        /* Scale */
+        .scale-bar {
+            position: fixed;
+            bottom: 44px;
+            right: 60px;
+            z-index: 100;
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            font-size: 10px;
+            color: rgba(255,255,255,0.5);
+        }
+        .scale-line {
+            width: 80px;
+            height: 3px;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-top: none;
+        }
     </style>
 </head>
-
 <body>
 
-    <!-- HEADER -->
-    <header>
-        <div class="logo">
-            <div class="live-dot"></div>
-            DISASTER MONITOR
-        </div>
-        <div class="stats-bar">
-            <div class="stat-item">Total: <strong id="statTotal">—</strong></div>
-            <div class="stat-item">🏔️ <strong id="statEq">—</strong></div>
-            <div class="stat-item">🌊 <strong id="statFlood">—</strong></div>
-            <div class="stat-item">🌀 <strong id="statTornado">—</strong></div>
-            <div class="stat-item">🔥 <strong id="statDrought">—</strong></div>
-            <div class="stat-item">🌊🌊 <strong id="statTsunami">—</strong></div>
-        </div>
-    </header>
+<!-- MAP -->
+<div id="map"></div>
 
-    <!-- FILTER BAR -->
-    <div class="filter-bar">
-        <span class="filter-label">Filter:</span>
-        <button class="btn active" data-filter="all">🌍 Toate</button>
-        <button class="btn" data-filter="earthquake">🏔️ Cutremur</button>
-        <button class="btn" data-filter="flood">🌊 Inundație</button>
-        <button class="btn" data-filter="tsunami">🌊🌊 Tsunami</button>
-        <button class="btn" data-filter="tornado">🌀 Tornadă</button>
-        <button class="btn" data-filter="drought">🔥 Secetă</button>
+<!-- LOGO -->
+<div class="logo">
+    <div class="logo-icon">🌍</div>
+    <div class="logo-text">
+        <span>DISASTER</span>
+        <span>MONITOR</span>
+    </div>
+</div>
+
+<!-- LEFT SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-header">
+        <span>Hărți</span>
+        <button title="Minimizează">⌃</button>
     </div>
 
-    <!-- MAIN -->
-    <div class="main">
-        <div id="map"></div>
+    <div class="sidebar-item active" data-layer="satellite">
+        <span class="check">✓</span>
+        <span class="icon">🛰️</span>
+        Satelit
+    </div>
+    <div class="sidebar-sub active">Live</div>
+    <div class="sidebar-sub">HD</div>
 
-        <!-- SIDEBAR -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <span>Evenimente active</span>
-                <span id="sidebarCount">0</span>
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-item" data-filter="all">
+        <span class="check">✓</span>
+        <span class="icon">📡</span>
+        Radar
+    </div>
+    <div class="sidebar-item" data-filter="flood">
+        <span class="check">✓</span>
+        <span class="icon">🌧️</span>
+        Precipitații
+    </div>
+    <div class="sidebar-item" data-filter="tornado">
+        <span class="check">✓</span>
+        <span class="icon">💨</span>
+        Vânt
+    </div>
+    <div class="sidebar-item" data-filter="drought">
+        <span class="check">✓</span>
+        <span class="icon">🌡️</span>
+        Temperatură
+    </div>
+    <div class="sidebar-item" data-filter="earthquake">
+        <span class="check">✓</span>
+        <span class="icon">💧</span>
+        Umiditate
+    </div>
+    <div class="sidebar-item" data-filter="tsunami">
+        <span class="check">✓</span>
+        <span class="icon">🔵</span>
+        Presiune
+    </div>
+</div>
+
+<!-- RIGHT TOOLBAR -->
+<div class="toolbar">
+    <div class="tool-btn" title="Căutare">🔍</div>
+    <div class="tool-divider"></div>
+    <div class="tool-btn" title="Setări">⚙️</div>
+    <div class="tool-btn" title="Informații">ℹ️</div>
+    <div class="tool-btn" title="Share">↗️</div>
+    <div class="tool-divider"></div>
+    <div class="tool-btn" title="Straturi">🗂️</div>
+    <div class="tool-btn" title="Localizare" id="locateBtn">🎯</div>
+    <div class="tool-divider"></div>
+    <div class="tool-btn" title="Mai mult">•••</div>
+</div>
+
+<!-- ZOOM CONTROLS -->
+<div class="zoom-controls">
+    <div class="zoom-btn" id="zoomIn">+</div>
+    <div class="zoom-btn" id="zoomOut">−</div>
+</div>
+
+<!-- TIME PLAYER -->
+<div class="time-player">
+    <button class="play-btn" id="playBtn">▶</button>
+
+    <div class="time-display">
+        <div class="time-date" id="timeDate">14 Mai</div>
+
+        <div class="time-clock">
+            <div class="time-segment">
+                <span id="timeHour">13</span>
+                <div class="time-arrows">
+                    <button onclick="changeHour(1)">▲</button>
+                    <button onclick="changeHour(-1)">▼</button>
+                </div>
             </div>
-            <div class="event-list" id="eventList">
-                <div style="padding:20px; color:var(--muted); font-size:12px; text-align:center;">
-                    Aștept date de la server...
+            <span class="time-sep">:</span>
+            <div class="time-segment">
+                <span id="timeMin">00</span>
+                <div class="time-arrows">
+                    <button onclick="changeMin(1)">▲</button>
+                    <button onclick="changeMin(-1)">▼</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- FOOTER -->
-    <div class="footer">
-        <span id="statusText" class="status-wait">🔄 Se conectează la server...</span>
-        <label class="refresh-toggle" title="Auto-refresh la 5s">
-            <div class="toggle-track on" id="toggleTrack">
-                <div class="toggle-thumb"></div>
-            </div>
-            <span>Auto-refresh</span>
-        </label>
-    </div>
+    <button class="next-btn" title="Următor">⏭</button>
+</div>
 
-    <!-- MAP LEGEND (moved inside map by JS) -->
-    <div class="legend" id="mapLegend" style="display:none;">
-        <div class="legend-row"><div class="legend-dot" style="background:var(--normal)"></div> normal</div>
-        <div class="legend-row"><div class="legend-dot" style="background:var(--elevated)"></div> elevated</div>
-        <div class="legend-row"><div class="legend-dot" style="background:var(--high)"></div> high</div>
-        <div class="legend-row"><div class="legend-dot" style="background:var(--critical)"></div> critical</div>
-    </div>
+<!-- STATUS BAR -->
+<div class="status-bar" id="statusText">© Zoom Earth, EUMETSAT, Meteosat</div>
 
-    <script>
-        // ── MAP INIT ──
-        // World view — map auto-zooms to wherever events actually are
-        const map = L.map('map').setView([20.0, 0.0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+<!-- COORDS -->
+<div class="coords-bar">
+    <span id="coordsDisplay">47° 00' N  28° 50' E</span>
+    <span>|</span>
+    <span>500 km</span>
+</div>
 
-        document.getElementById('map').appendChild(document.getElementById('mapLegend'));
-        document.getElementById('mapLegend').style.display = 'block';
+<!-- SCALE -->
+<div class="scale-bar">
+    <div class="scale-line"></div>
+    <span>500 km</span>
+</div>
 
-        let currentLayer = null;
-        let currentFilter = 'all';
-        let autoRefresh = true;
-        let refreshTimer = null;
-        let lastEventCount = 0;
-        let allEvents = [];
+<script>
+    // Map centered on Moldova/Eastern Europe (like the screenshot)
+    const map = L.map('map', {
+        zoomControl: false,
+        attributionControl: false
+    }).setView([47.5, 30], 5);
 
-        // ── HELPERS ──
-        const TYPE_ICONS = {
-            earthquake: '🏔️',
-            flood:      '🌊',
-            tsunami:    '🌊🌊',
-            tornado:    '🌀',
-            drought:    '🔥',
-        };
+    // Satellite-style dark tile layer
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19
+    }).addTo(map);
 
-        function getColorByRisk(risk) {
-            switch (risk) {
-                case 'critical': return '#e74c3c';
-                case 'high':     return '#e67e22';
-                case 'elevated': return '#f39c12';
-                default:         return '#2ecc71';
-            }
+    // Show coordinates on mousemove
+    map.on('mousemove', function(e) {
+        const lat = e.latlng.lat.toFixed(2);
+        const lng = e.latlng.lng.toFixed(2);
+        const latDir = lat >= 0 ? 'N' : 'S';
+        const lngDir = lng >= 0 ? 'E' : 'W';
+        document.getElementById('coordsDisplay').textContent =
+            `${Math.abs(lat)}° ${latDir}  ${Math.abs(lng)}° ${lngDir}`;
+    });
+
+    // Custom zoom buttons
+    document.getElementById('zoomIn').onclick = () => map.zoomIn();
+    document.getElementById('zoomOut').onclick = () => map.zoomOut();
+
+    // Locate button
+    document.getElementById('locateBtn').onclick = () => {
+        map.locate({ setView: true, maxZoom: 10 });
+    };
+
+    // ── SIDEBAR LAYER SWITCHING ──
+    let currentFilter = 'all';
+    document.querySelectorAll('.sidebar-item[data-filter]').forEach(item => {
+        item.addEventListener('click', () => {
+            document.querySelectorAll('.sidebar-item[data-filter]').forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+            currentFilter = item.getAttribute('data-filter');
+            fetchAndDisplay();
+        });
+    });
+
+    // ── RISK COLORS ──
+    function getColorByRisk(risk) {
+        switch(risk) {
+            case 'critical': return '#e74c3c';
+            case 'high':     return '#e67e22';
+            case 'elevated': return '#f39c12';
+            default:         return '#2ecc71';
         }
+    }
 
-        function getIconByType(type, risk) {
-            const color = getColorByRisk(risk);
-            return L.divIcon({
-                html: `
-                    <div style="
-                        position:relative;
-                        width:16px; height:16px;
-                        background:${color};
-                        border-radius:50%;
-                        border:2px solid rgba(255,255,255,0.8);
-                        box-shadow:0 0 10px ${color};
-                    "></div>
-                    <div style="
-                        position:absolute; top:0; left:0;
-                        width:16px; height:16px;
-                        border-radius:50%;
-                        background:${color};
-                        opacity:0.35;
-                        animation: pulse-ring 2s ease-out infinite;
-                        transform-origin: center center;
-                    "></div>`,
-                iconSize: [16, 16],
-                iconAnchor: [8, 8],
-                className: ''
-            });
-        }
+    function getIconByType(type, risk) {
+        const color = getColorByRisk(risk);
+        return L.divIcon({
+            html: `<div style="background:${color}; width:14px; height:14px; border-radius:50%; border:2px solid rgba(255,255,255,0.8); box-shadow:0 0 8px ${color}, 0 0 16px ${color}40;"></div>`,
+            iconSize: [14, 14],
+            className: 'custom-marker'
+        });
+    }
 
-        function coordsLabel(lat, lon) {
-            const ns = lat >= 0 ? 'N' : 'S';
-            const ew = lon >= 0 ? 'E' : 'W';
-            return `${Math.abs(lat).toFixed(2)}°${ns}, ${Math.abs(lon).toFixed(2)}°${ew}`;
-        }
+    let currentLayer = null;
 
-        // ── SIDEBAR ──
-        function updateSidebar(events) {
-            const list = document.getElementById('eventList');
-            const filtered = events.filter(ev => currentFilter === 'all' || ev.type === currentFilter);
-            document.getElementById('sidebarCount').textContent = filtered.length;
+    function fetchAndDisplay() {
+        fetch('http://localhost:8080')
+            .then(res => res.json())
+            .then(data => {
+                if (currentLayer) map.removeLayer(currentLayer);
+                const events = data.events || [];
+                document.getElementById('statusText').textContent =
+                    `📡 ${events.length} evenimente · ${new Date().toLocaleTimeString('ro-RO')} · © EUMETSAT, Meteosat`;
 
-            if (filtered.length === 0) {
-                list.innerHTML = `<div style="padding:20px; color:var(--muted); font-size:12px; text-align:center;">
-                    Niciun eveniment pentru filtrul selectat.
-                </div>`;
-                return;
-            }
+                const filtered = events.filter(ev => currentFilter === 'all' || ev.type === currentFilter);
+                const group = L.layerGroup();
 
-            const sorted = [...filtered].sort((a, b) => b.probability - a.probability);
-            const isNew  = filtered.length > lastEventCount;
+                filtered.forEach(ev => {
+                    const color = getColorByRisk(ev.risk);
+                    const radius = Math.min(ev.affected_radius * 800, 350000);
 
-            list.innerHTML = sorted.map((ev, i) => {
-                const icon     = TYPE_ICONS[ev.type] || '⚠️';
-                const risk     = ev.risk || 'normal';
-                const newClass = (isNew && i === 0) ? 'new-event' : '';
-                return `<div class="event-item ${newClass}" onclick="flyTo(${ev.latitude},${ev.longitude})">
-                    <div class="event-icon">${icon}</div>
-                    <div class="event-meta">
-                        <div class="event-type">${ev.type}</div>
-                        <div class="event-coords">${coordsLabel(ev.latitude, ev.longitude)}</div>
-                        <div class="event-coords">Mag: ${ev.magnitude.toFixed(1)} · Rază: ${ev.affected_radius.toFixed(0)} km</div>
-                    </div>
-                    <div class="event-risk risk-${risk}">${risk}</div>
-                </div>`;
-            }).join('');
-        }
+                    L.circle([ev.latitude, ev.longitude], {
+                        radius,
+                        color,
+                        weight: 1,
+                        fillColor: color,
+                        fillOpacity: 0.18
+                    }).bindPopup(`
+                        <b style="color:${color}">${ev.type.toUpperCase()}</b><br>
+                        ⚠️ Risc: <b>${ev.risk}</b><br>
+                        📊 Probabilitate: ${(ev.probability * 100).toFixed(1)}%<br>
+                        📏 Magnitudine: ${ev.magnitude.toFixed(1)}<br>
+                        🎯 Rază: ${ev.affected_radius.toFixed(0)} km<br>
+                        🕒 ${new Date(ev.detection_time * 1000).toLocaleString('ro-RO')}
+                    `).addTo(group);
 
-        function flyTo(lat, lon) {
-            map.flyTo([lat, lon], 6, { duration: 1.2 });
-        }
-
-        // ── STATS ──
-        function updateStats(events) {
-            document.getElementById('statTotal').textContent   = events.length;
-            document.getElementById('statEq').textContent      = events.filter(e => e.type === 'earthquake').length;
-            document.getElementById('statFlood').textContent   = events.filter(e => e.type === 'flood').length;
-            document.getElementById('statTornado').textContent = events.filter(e => e.type === 'tornado').length;
-            document.getElementById('statDrought').textContent = events.filter(e => e.type === 'drought').length;
-            document.getElementById('statTsunami').textContent = events.filter(e => e.type === 'tsunami').length;
-        }
-
-        // ── MAP RENDER ──
-        function renderMap(events) {
-            if (currentLayer) map.removeLayer(currentLayer);
-
-            const filtered = events.filter(ev => currentFilter === 'all' || ev.type === currentFilter);
-            const group    = L.layerGroup();
-
-            filtered.forEach(ev => {
-                const color  = getColorByRisk(ev.risk);
-                // Scale radius sensibly: affected_radius is in km, Leaflet wants metres
-                const radius = Math.min(ev.affected_radius * 1000, 500000);
-
-                const popupContent = `
-                    <b>${TYPE_ICONS[ev.type] || '⚠️'} ${ev.type.toUpperCase()}</b><br>
-                    ⚠️ Risk: <span style="color:${color}">${ev.risk}</span><br>
-                    📊 Probabilitate: ${(ev.probability * 100).toFixed(1)}%<br>
-                    📏 Magnitudine: ${ev.magnitude.toFixed(1)}<br>
-                    🎯 Rază afectată: ${ev.affected_radius.toFixed(0)} km<br>
-                    📍 ${coordsLabel(ev.latitude, ev.longitude)}<br>
-                    🕒 ${new Date(ev.detection_time * 1000).toLocaleString()}
-                `;
-
-                L.circle([ev.latitude, ev.longitude], {
-                    radius,
-                    color,
-                    weight: 1.5,
-                    fillColor: color,
-                    fillOpacity: 0.15
-                }).bindPopup(popupContent).addTo(group);
-
-                L.marker([ev.latitude, ev.longitude], {
-                    icon: getIconByType(ev.type, ev.risk)
-                }).bindPopup(popupContent).addTo(group);
-            });
-
-            group.addTo(map);
-            currentLayer = group;
-
-            // Auto-zoom to fit all visible events on first load
-            if (filtered.length > 0 && lastEventCount === 0) {
-                try {
-                    const bounds = group.getBounds();
-                    if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] });
-                } catch(e) {}
-            }
-        }
-
-        // ── FETCH ──
-        function fetchAndDisplay() {
-            fetch('http://localhost:8080?t=' + Date.now())
-                .then(res => res.json())
-                .then(data => {
-                    allEvents = data.events || [];
-                    const statusEl = document.getElementById('statusText');
-                    statusEl.className   = 'status-ok';
-                    statusEl.textContent = `📡 ${allEvents.length} evenimente active · ${new Date().toLocaleTimeString()}`;
-
-                    renderMap(allEvents);
-                    updateSidebar(allEvents);
-                    updateStats(allEvents);
-                    lastEventCount = allEvents.filter(ev => currentFilter === 'all' || ev.type === currentFilter).length;
-                })
-                .catch(() => {
-                    const statusEl = document.getElementById('statusText');
-                    statusEl.className   = 'status-err';
-                    statusEl.textContent = '❌ Nu se poate conecta la server. Rulează backend-ul C.';
+                    L.marker([ev.latitude, ev.longitude], {
+                        icon: getIconByType(ev.type, ev.risk)
+                    }).bindPopup(`
+                        <b style="color:${color}">🔥 ${ev.type}</b><br>
+                        ${ev.risk.toUpperCase()}<br>
+                        ⚡ ${(ev.probability*100).toFixed(0)}%
+                    `).addTo(group);
                 });
-        }
 
-        // ── FILTERS ──
-        document.querySelectorAll('.btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentFilter = btn.getAttribute('data-filter');
-                renderMap(allEvents);
-                updateSidebar(allEvents);
+                group.addTo(map);
+                currentLayer = group;
+            })
+            .catch(() => {
+                document.getElementById('statusText').textContent =
+                    '⚠️ Backend offline · © EUMETSAT, Meteosat';
             });
-        });
+    }
 
-        // ── AUTO-REFRESH TOGGLE ──
-        const toggleTrack = document.getElementById('toggleTrack');
-        toggleTrack.addEventListener('click', () => {
-            autoRefresh = !autoRefresh;
-            toggleTrack.classList.toggle('on', autoRefresh);
-            if (autoRefresh) {
-                refreshTimer = setInterval(fetchAndDisplay, 5000);
-            } else {
-                clearInterval(refreshTimer);
-                document.getElementById('statusText').textContent = '⏸ Auto-refresh oprit';
-                document.getElementById('statusText').className   = 'status-wait';
-            }
-        });
+    fetchAndDisplay();
+    setInterval(fetchAndDisplay, 5000);
 
-        // ── START ──
-        fetchAndDisplay();
-        refreshTimer = setInterval(fetchAndDisplay, 5000);
-    </script>
+    // ── TIME PLAYER ──
+    let hour = 13, minute = 0, playing = false, playInterval = null;
+
+    function updateTimeDisplay() {
+        document.getElementById('timeHour').textContent = String(hour).padStart(2, '0');
+        document.getElementById('timeMin').textContent  = String(minute).padStart(2, '0');
+    }
+
+    window.changeHour = function(d) {
+        hour = (hour + d + 24) % 24;
+        updateTimeDisplay();
+    };
+    window.changeMin = function(d) {
+        minute = (minute + d + 60) % 60;
+        updateTimeDisplay();
+    };
+
+    document.getElementById('playBtn').addEventListener('click', function() {
+        playing = !playing;
+        this.textContent = playing ? '⏸' : '▶';
+        if (playing) {
+            playInterval = setInterval(() => {
+                minute += 10;
+                if (minute >= 60) { minute = 0; hour = (hour + 1) % 24; }
+                updateTimeDisplay();
+            }, 800);
+        } else {
+            clearInterval(playInterval);
+        }
+    });
+</script>
 </body>
 </html>
