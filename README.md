@@ -1,6 +1,6 @@
 # 🌍 Disaster Prevention System
 
-> A real-time natural disaster monitoring and early-warning platform built in C, with a live web dashboard.
+> A real-time natural disaster monitoring built in C, with a live web dashboard.
 
 The system continuously collects data from public APIs, processes it through domain-specific detection modules (seismic, meteorological, hydrological), and serves the results to a browser-based interactive map.
 
