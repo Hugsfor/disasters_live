@@ -17,11 +17,7 @@
 
 #define PORT 8080
 
-// Include global.h so we use the SAME GlobalEvent type, global_events_list,
-// global_events_count, and events_mutex as data_parser.c and globals.c.
-// The old server.c only read global_earthquake_risk/global_flood_risk (two summary doubles)
-// and built hardcoded fake events from them. It never read the real events array
-// that data_parser.c was filling. That's why the browser always got empty or stale data.
+
 #include "headers/global.h"
 
 extern double global_earthquake_risk;
