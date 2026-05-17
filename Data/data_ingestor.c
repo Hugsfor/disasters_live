@@ -27,11 +27,6 @@ static size_t write_callback(void *contents, size_t size, size_t nmemb, void *us
 }
 
 // Generic GET request — with proper headers so APIs don't block us.
-// FIX: "libcurl-agent/1.0" is blocked by GDACS, NOAA, and others.
-//      Using a real browser User-Agent + Accept headers fixes this.
-// FIX: Added 15s timeout so a slow/dead server doesn't hang the loop.
-// FIX: Added CURLOPT_FOLLOWLOCATION to follow HTTP redirects (GDACS redirects).
-// FIX: Added SSL verification (was missing, could silently fail on HTTPS).
 char *http_get(const char *url) {
     CURL *curl = curl_easy_init();
     if (!curl) return NULL;
