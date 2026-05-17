@@ -12,11 +12,7 @@
 #include "../headers/hydro.h"
 
 // Write an event directly into the shared list the server reads.
-void push_global_event(const char *type,
-                               double lat, double lon,
-                               double probability,
-                               double magnitude,
-                               double affected_radius_km)
+void push_global_event(const char *type, double lat, double lon, double probability, double magnitude, double affected_radius_km)
 {
     pthread_mutex_lock(&events_mutex);
     if (global_events_count < 200) {
@@ -35,14 +31,8 @@ void push_global_event(const char *type,
     pthread_mutex_unlock(&events_mutex);
 }
 
-// ======================================================
-// WEATHER / FLOOD — open-meteo
-// ======================================================
 
-void parse_and_process(const char *raw_json,
-                       seismic_monitor *seismo,
-                       weather_monitor *weather,
-                       flood_monitor *flood)
+void parse_and_process(const char *raw_json, seismic_monitor *seismo, weather_monitor *weather, flood_monitor *flood)
 {
     if (!raw_json) return;
 
@@ -101,9 +91,6 @@ void parse_and_process(const char *raw_json,
     cJSON_Delete(json);
 }
 
-// ======================================================
-// EARTHQUAKE — USGS GeoJSON feed
-// ======================================================
 
 void parse_earthquake_data(const char *raw_json, seismic_monitor *seismo)
 {
@@ -148,10 +135,6 @@ void parse_earthquake_data(const char *raw_json, seismic_monitor *seismo)
     cJSON_Delete(json);
 }
 
-// ======================================================
-// GDACS FEED — floods, tsunamis, cyclones, droughts
-// https://www.gdacs.org/xml/rss.xml  (no key needed)
-// ======================================================
 
 void parse_gdacs_feed(const char *xml)
 {
@@ -213,10 +196,6 @@ void parse_gdacs_feed(const char *xml)
     }
 }
 
-// ======================================================
-// NOAA NWS ACTIVE ALERTS — tornadoes, floods, hurricanes
-// https://api.weather.gov/alerts/active  (no key needed)
-// ======================================================
 
 void parse_noaa_alerts(const char *json)
 {
@@ -287,11 +266,6 @@ void parse_noaa_alerts(const char *json)
     cJSON_Delete(root);
 }
 
-// ======================================================
-// NASA FIRMS — active wildfires (drought proxy)
-// Requires free MAP_KEY from https://firms.modaps.eosdis.nasa.gov/api/
-// ======================================================
-
 void parse_firms_fire(const char *csv)
 {
     if (!csv) return;
@@ -333,20 +307,6 @@ void parse_firms_fire(const char *csv)
 
     printf("Parsed %d fire events from NASA FIRMS\n", count);
 }
-
-// ======================================================
-// GDACS JSON API — floods, tsunamis, cyclones, droughts
-// https://www.gdacs.org/gdacsapi/api/events/geteventlist/SEARCH
-// This is the official GDACS REST API, much more reliable than
-// the XML RSS feed because it returns clean JSON and doesn't
-// require a browser User-Agent to serve correctly.
-//
-// Response structure:
-// { "features": [ { "properties": { "eventtype": "FL",
-//     "alertlevel": "Orange", "country": "...",
-//     "fromdate": "...", "todate": "..." },
-//   "geometry": { "coordinates": [lon, lat] } } ] }
-// ======================================================
 
 void parse_gdacs_json(const char *json)
 {
